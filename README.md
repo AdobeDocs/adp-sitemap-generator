@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
     - uses: actions/checkout@v2
-    - uses: AdobeDocs/static-website-deploy@main
+    - uses: AdobeDocs/static-website-deploy@master
       with:
         enabled-static-website: 'true'
         source: 'MyFolder'
