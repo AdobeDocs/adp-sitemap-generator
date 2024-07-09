@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches:
+      - main
       - master
       - releases/*
 
@@ -13,19 +14,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-          os: [windows-latest, ubuntu-latest, macos-latest]    
+          os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - name: 'Checkout the code'
         uses: actions/checkout@v2
         with:
           ref: ${{ github.ref }}
-
       - name: 'Validate Build'
         run: |
           npm install
-          npm run build 
-      
+          npm run build
       - name: 'Test Build'
         run: |
           npm test --if-exists
-           
