@@ -39,5 +39,5 @@ branding:
   icon: 'upload-cloud'
   color: blue
 runs:
-  using: 'node12'
+  using: 'node20'
   main: 'lib/index.js'
