@@ -107,6 +107,8 @@ const main = async () => {
         throw "Either specify a container name, or set enableStaticWebSite to true!";
     }
 
+    const containerService = blobServiceClient.getContainerClient(containerName);
+
     const outputCSV = path.join(__dirname, 'blobAudit.csv');
     fs.writeFileSync(outputCSV, 'URL,LastModified\n'); // header row
 
@@ -156,7 +158,6 @@ const main = async () => {
         await blobServiceClient.setProperties(props);
     }
 
-    const containerService = blobServiceClient.getContainerClient(containerName);
     if (!await containerService.exists()) {
         await containerService.create({ access: accessPolicy });
     }
