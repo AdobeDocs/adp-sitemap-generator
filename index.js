@@ -107,24 +107,6 @@ const main = async () => {
         throw "Either specify a container name, or set enableStaticWebSite to true!";
     }
 
-    const containerService = blobServiceClient.getContainerClient(containerName);
-
-    const outputCSV = path.join(__dirname, 'blobAudit.csv');
-    fs.writeFileSync(outputCSV, 'URL,LastModified\n'); // header row
-
-    // List blobs and log metadata
-    for await (const blob of containerService.listBlobsFlat()) {
-        const blobClient = containerService.getBlobClient(blob.name);
-        const url = blobClient.url;
-        const lastModified = blob.properties.lastModified;
-
-        const csvRow = `"${url}","${lastModified}"\n`;
-        fs.appendFileSync(outputCSV, csvRow);
-    }
-
-    console.log(`✅ Metadata audit complete. CSV saved to ${outputCSV}`);
-
-
     const source = getInput('source');
     let target = getInput('target');
     if (target.startsWith('/')) target = target.slice(1);
@@ -166,6 +148,22 @@ const main = async () => {
     }
 
     const rootFolder = path.resolve(source);
+
+    const outputCSV = path.join(__dirname, 'blobAudit.csv');
+    fs.writeFileSync(outputCSV, 'URL,LastModified\n'); // header row
+
+    // List blobs and log metadata
+    for await (const blob of containerService.listBlobsFlat()) {
+        const blobClient = containerService.getBlobClient(blob.name);
+        const url = blobClient.url;
+        const lastModified = blob.properties.lastModified;
+
+        const csvRow = `"${url}","${lastModified}"\n`;
+        fs.appendFileSync(outputCSV, csvRow);
+    }
+
+    console.log(`✅ Metadata audit complete. CSV saved to ${outputCSV}`);
+
 
     
 };
