@@ -151,23 +151,22 @@ const main = async () => {
 
     const rootFolder = path.resolve(source);
 
-   // Save CSV next to your script (current directory)
-    const outputCSV = path.join(__dirname, 'blobAudit.csv');
-    fs.writeFileSync(outputCSV, 'URL,LastModified\n');
+    // Save CSV next to your script (current directory)
+    // const outputCSV = path.join(__dirname, 'blobAudit.csv');
+    // fs.writeFileSync(outputCSV, 'URL,LastModified\n');
+    const siteUrl = "https://developer.adobe.com/";
 
     for await (const blob of containerService.listBlobsFlat({prefix: target})) {
-        // const blobClient = await containerService.getBlobClient(blob.name);
-        // const url = blobClient.url;
-        // const lastModified = blob.properties.lastModified;
-        // const csvRow = `"${url}","${lastModified}"\n`;
-        // fs.appendFileSync(outputCSV, csvRow);
-        const blobClient = containerService.getBlobClient(blob.name);
-        const url = blobClient.url;
-        const lastModified = blob.properties.lastModified;
-        console.log(`Name: ${blob.name}, LastModified: ${lastModified}`);
-    }
+        // only consider blobs ending in “index.html”
+        if (!blob.name.endsWith("index.html")) continue;
+        const route = blob.name.replace(/index\.html$/, "");
 
-    console.log(`✅ Metadata audit complete. CSV saved to ${outputCSV}`);
+        // tranform blob.properties.lastModified:
+        const rawDate       = blob.properties.lastModified;
+        const lastModified  = rawDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+
+        console.log(`PageURL: ${siteUrl}${route}, LastModified: ${lastModified}`);
+    }
 
     // if(fs.statSync(rootFolder).isFile()){
     //     // when does this ever get called in the case of AdobeDocs?
