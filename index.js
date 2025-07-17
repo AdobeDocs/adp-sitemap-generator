@@ -156,11 +156,15 @@ const main = async () => {
     fs.writeFileSync(outputCSV, 'URL,LastModified\n');
 
     for await (const blob of containerService.listBlobsFlat({prefix: target})) {
-        const blobClient = await containerService.getBlobClient(blob.name);
+        // const blobClient = await containerService.getBlobClient(blob.name);
+        // const url = blobClient.url;
+        // const lastModified = blob.properties.lastModified;
+        // const csvRow = `"${url}","${lastModified}"\n`;
+        // fs.appendFileSync(outputCSV, csvRow);
+        const blobClient = containerService.getBlobClient(blob.name);
         const url = blobClient.url;
         const lastModified = blob.properties.lastModified;
-        const csvRow = `"${url}","${lastModified}"\n`;
-        fs.appendFileSync(outputCSV, csvRow);
+        console.log(`URL: ${url}, LastModified: ${lastModified}`);
     }
 
     console.log(`✅ Metadata audit complete. CSV saved to ${outputCSV}`);
