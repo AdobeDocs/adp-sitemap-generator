@@ -160,7 +160,7 @@ const main = async () => {
         // only consider blobs ending in “index.html”
         if (!blob.name.endsWith("index.html")) continue;
         const route = blob.name.slice(0, -"index.html".length);
-        if (route.endsWith(skip404)) continue;
+        if (route.endsWith("404/")) continue;
         // tranform blob.properties.lastModified:
         const rawDate       = blob.properties.lastModified;
         const lastModified  = rawDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
