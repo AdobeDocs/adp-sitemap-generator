@@ -153,7 +153,7 @@ const main = async () => {
 
     const siteUrl = "https://developer.adobe.com/";
 
-    for await (const blob of containerService.listBlobsFlat({prefix: "/"})) {
+    for await (const blob of containerService.listBlobsFlat()) {
         // only consider blobs ending in “index.html”
         if (!blob.name.endsWith("index.html")) continue;
         const route = blob.name.slice(0, -"index.html".length);
