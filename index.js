@@ -8,7 +8,7 @@ const { getInput, setFailed } = require('@actions/core');
 const { BlobServiceClient } = require('@azure/storage-blob');
 
 const { XMLParser } = require('fast-xml-parser');
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 
 async function* listFiles(rootFolder){
 
@@ -154,16 +154,40 @@ const main = async () => {
 
     const rootFolder = path.resolve(source);
 
-    (async () => {
-    const response = await fetch('https://main--adp-devsite--adobedocs.aem.page/sitemap.xml');
-    const xmlData = await response.text();
+    // (async () => {
+    // const response = await fetch('https://main--adp-devsite--adobedocs.aem.page/sitemap.xml');
+    // const xmlData = await response.text();
 
-    const parser = new XMLParser();
-    const sitemap = parser.parse(xmlData);
+    // const parser = new XMLParser();
+    // const sitemap = parser.parse(xmlData);
 
-    console.log(sitemap);
-    })();
+    // console.log(sitemap);
+    // })();
 
+    async function fetchSitemap() {
+        try {
+            const response = await fetch('https://main--adp-devsite--adobedocs.aem.page/sitemap.xml');
+            if (!response.ok) {
+            throw new Error(`Failed to fetch sitemap: ${response.statusText}`);
+            }
+
+            const xmlText = await response.text();
+            const result = parser.parse(xmlText);
+
+            // Ensure we have URLs to process
+            if (!result.urlset?.url) {
+            throw new Error('No URLs found in sitemap');
+            }
+            console.log(result);
+            // Filter out excluded URLs
+            // return result.urlset.url.filter(url => shouldIncludeUrl(url.loc));
+        } catch (error) {
+            console.error('Error fetching sitemap:', error);
+            throw error;
+        }
+    }
+
+    fetchSitemap();
 
     const siteUrl = "https://developer.adobe.com/";
 
