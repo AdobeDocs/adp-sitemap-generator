@@ -24,6 +24,7 @@
     "@actions/core": "^1.2.6",
     "@azure/storage-blob": "^12.27.0",
     "@vercel/ncc": "^0.38.3",
+    "fast-xml-parser": "^5.2.5",
     "mime-types": "^2.1.26"
   },
   "devDependencies": {

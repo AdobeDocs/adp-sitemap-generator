@@ -7,6 +7,9 @@ const { lookup } = require('mime-types');
 const { getInput, setFailed } = require('@actions/core');
 const { BlobServiceClient } = require('@azure/storage-blob');
 
+const { XMLParser } = require('fast-xml-parser');
+const fetch = require('node-fetch');
+
 async function* listFiles(rootFolder){
 
     const readdir = promisify(fs.readdir);
@@ -150,6 +153,17 @@ const main = async () => {
     }
 
     const rootFolder = path.resolve(source);
+
+    (async () => {
+    const response = await fetch('https://main--adp-devsite--adobedocs.aem.page/sitemap.xml');
+    const xmlData = await response.text();
+
+    const parser = new XMLParser();
+    const sitemap = parser.parse(xmlData);
+
+    console.log(sitemap);
+    })();
+
 
     const siteUrl = "https://developer.adobe.com/";
 
