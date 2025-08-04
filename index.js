@@ -167,17 +167,17 @@ const main = async () => {
 
     const siteUrl = "https://developer.adobe.com/";
 
-    for await (const blob of containerService.listBlobsFlat()) {
-        // only consider blobs ending in “index.html”
-        if (!blob.name.endsWith("index.html")) continue;
-        const route = blob.name.slice(0, -"index.html".length);
-        if (route.endsWith("404/")) continue;
-        // tranform blob.properties.lastModified:
-        const rawDate       = blob.properties.lastModified;
-        const lastModified  = rawDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    // for await (const blob of containerService.listBlobsFlat()) {
+    //     // only consider blobs ending in “index.html”
+    //     if (!blob.name.endsWith("index.html")) continue;
+    //     const route = blob.name.slice(0, -"index.html".length);
+    //     if (route.endsWith("404/")) continue;
+    //     // tranform blob.properties.lastModified:
+    //     const rawDate       = blob.properties.lastModified;
+    //     const lastModified  = rawDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
 
-        console.log(`PageURL: ${siteUrl}${route}  LastModified: ${lastModified}`);
-    }
+    //     console.log(`PageURL: ${siteUrl}${route}  LastModified: ${lastModified}`);
+    // }
 
     // if(fs.statSync(rootFolder).isFile()){
     //     // when does this ever get called in the case of AdobeDocs?
