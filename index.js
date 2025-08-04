@@ -172,6 +172,8 @@ const main = async () => {
             }
 
             const xmlText = await response.text();
+            const parser = new XMLParser();
+
             const result = parser.parse(xmlText);
 
             // Ensure we have URLs to process
