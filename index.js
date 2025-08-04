@@ -196,6 +196,7 @@ const main = async () => {
             }
 
             // Filter out excluded URLs
+            console.log(result.urlset.url.filter(url => shouldIncludeUrl(url.loc)));
             return result.urlset.url.filter(url => shouldIncludeUrl(url.loc));
 
         } catch (error) {
@@ -204,7 +205,7 @@ const main = async () => {
         }
     }
 
-    console.log(fetchSitemap());
+    fetchSitemap();
 
     const siteUrl = "https://developer.adobe.com/";
 
