@@ -194,7 +194,6 @@ const main = async () => {
             if (!result.urlset?.url) {
             throw new Error('No URLs found in sitemap');
             }
-            console.dir(result, { depth: null });
 
             // Filter out excluded URLs
             return result.urlset.url.filter(url => shouldIncludeUrl(url.loc));
