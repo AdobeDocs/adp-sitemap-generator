@@ -25,7 +25,8 @@
     "@azure/storage-blob": "^12.27.0",
     "@vercel/ncc": "^0.38.3",
     "fast-xml-parser": "^5.2.5",
-    "mime-types": "^2.1.26"
+    "mime-types": "^2.1.26",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@zeit/ncc": "0.22.1"
