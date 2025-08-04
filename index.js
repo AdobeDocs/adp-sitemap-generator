@@ -164,6 +164,22 @@ const main = async () => {
     // console.log(sitemap);
     // })();
 
+    const parser = new XMLParser({
+        ignoreAttributes: false,
+        attributeNamePrefix: '_',
+    });
+
+    const EXCLUDED_PATTERNS = [
+        /^\/test\//,
+        /^\/franklin_assets\//,
+        /^\/tools\//,
+        /\/nav$/
+    ];
+
+    function shouldIncludeUrl(url) {
+        return !EXCLUDED_PATTERNS.some(pattern => pattern.test(new URL(url).pathname));
+    }
+
     async function fetchSitemap() {
         try {
             const response = await fetch('https://main--adp-devsite--adobedocs.aem.page/sitemap.xml');
@@ -172,8 +188,6 @@ const main = async () => {
             }
 
             const xmlText = await response.text();
-            const parser = new XMLParser();
-
             const result = parser.parse(xmlText);
 
             // Ensure we have URLs to process
@@ -183,14 +197,15 @@ const main = async () => {
             console.dir(result, { depth: null });
 
             // Filter out excluded URLs
-            // return result.urlset.url.filter(url => shouldIncludeUrl(url.loc));
+            return result.urlset.url.filter(url => shouldIncludeUrl(url.loc));
+
         } catch (error) {
             console.error('Error fetching sitemap:', error);
             throw error;
         }
     }
 
-    fetchSitemap();
+    console.log(fetchSitemap());
 
     const siteUrl = "https://developer.adobe.com/";
 
