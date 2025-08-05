@@ -8,7 +8,6 @@ const { getInput, setFailed } = require('@actions/core');
 const { BlobServiceClient } = require('@azure/storage-blob');
 
 const { XMLParser } = require('fast-xml-parser');
-// const fetch = require('node-fetch');
 
 async function* listFiles(rootFolder){
 
@@ -208,7 +207,7 @@ const main = async () => {
                 };
             });
 
-            console.log(updatedUrls);
+            // console.log(updatedUrls);
             return updatedUrls;
 
         } catch (error) {
@@ -219,17 +218,39 @@ const main = async () => {
 
     fetchEDSSitemap();
 
-    // for await (const blob of containerService.listBlobsFlat()) {
-    //     // only consider blobs ending in “index.html”
-    //     if (!blob.name.endsWith("index.html")) continue;
-    //     const route = blob.name.slice(0, -"index.html".length);
-    //     if (route.endsWith("404/")) continue;
-    //     // tranform blob.properties.lastModified:
-    //     const rawDate       = blob.properties.lastModified;
-    //     const lastModified  = rawDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    // Collect page data instead of just logging it
+    const pageData = [];
+    
+    for await (const blob of containerService.listBlobsFlat()) {
+        // only consider blobs ending in "index.html"
+        if (!blob.name.endsWith("index.html")) continue;
+        const route = blob.name.slice(0, -"index.html".length);
+        if (route.endsWith("404/")) continue;
+        // tranform blob.properties.lastModified:
+        const rawDate       = blob.properties.lastModified;
+        const lastModified  = rawDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
 
-    //     console.log(`PageURL: ${siteUrl}${route}  LastModified: ${lastModified}`);
-    // }
+        const pageInfo = `PageURL: ${siteUrl}${route}  LastModified: ${lastModified}`;
+        // console.log(pageInfo);
+        pageData.push(pageInfo);
+    }
+
+    // Create a file with the collected data and upload to blob storage
+    if (pageData.length > 0) {
+        const pageDataContent = pageData.join('\n');
+        const tempFilePath = path.join(__dirname, 'test-sitemap.txt');
+        
+        // Write to temporary file
+        fs.writeFileSync(tempFilePath, pageDataContent);
+        
+        // Upload to root of blob storage (no path prefix since target is root)
+        await uploadFileToBlob(containerService, tempFilePath, 'test-sitemap.txt');
+        
+        // Clean up temporary file
+        fs.unlinkSync(tempFilePath);
+        
+        console.log(`Uploaded page data file with ${pageData.length} entries to blob storage root`);
+    }
 
     // if(fs.statSync(rootFolder).isFile()){
     //     // when does this ever get called in the case of AdobeDocs?
