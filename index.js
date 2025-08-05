@@ -170,10 +170,12 @@ const main = async () => {
     });
 
     const EXCLUDED_PATTERNS = [
-        /^\/test\//,
-        /^\/franklin_assets\//,
-        /^\/tools\//,
-        /\/nav$/
+        /^\/test\//,                  // starts with /test/
+        /^\/franklin_assets\//,       // starts with /franklin_assets/
+        /^\/tools\//,                 // starts with /tools/
+        /\/nav$/,                     // ends with /nav
+        /^\/github-actions-test\//,   // starts with /github-actions-test/
+        /\/config\/?$/                // ends with /config/ or /config
     ];
 
     function shouldIncludeUrl(url) {
