@@ -258,6 +258,7 @@ const main = async () => {
         // console.log("Blob found:", blob.name);
         if (blob.name === 'test-sitemap.txt') {
             console.log("yes");
+            console.log(blob.name);
             found = true;
             break;
         }
