@@ -252,6 +252,22 @@ const main = async () => {
         console.log(`Uploaded page data file with ${pageData.length} entries to blob storage root`);
     }
 
+    let found = false;
+
+    for await (const blob of containerService.listBlobsFlat()) {
+        // console.log("Blob found:", blob.name);
+        if (blob.name === 'test-sitemap.txt') {
+            console.log("yes");
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        console.log("test-sitemap.txt not found");
+    }
+
+
     // if(fs.statSync(rootFolder).isFile()){
     //     // when does this ever get called in the case of AdobeDocs?
     //     // seems to be if the pathPrefix is a file location then this uploads to that???
