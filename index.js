@@ -99,8 +99,14 @@ const main = async () => {
     let deleteTempStart;
     let deleteTempEnd; 
     
-    const connectionString = getInput('connection-string');
-    if (!connectionString) {
+    const connectionStringRead = getInput('connection-string-read');
+    const connectionStringPublish = getInput('connection-string-publish');
+
+    if (!connectionStringRead) {
+        throw "Connection string must be specified!";
+    }
+
+    if (!connectionStringPublish) {
         throw "Connection string must be specified!";
     }
 
@@ -127,10 +133,12 @@ const main = async () => {
     const removeExistingFiles = getInput('remove-existing-files');
     const excludeSubfolder = getInput('exclude-subfolder');
 
-    const blobServiceClient = await BlobServiceClient.fromConnectionString(connectionString);
+    // Setup blob service clients for reading and publishing
+    const blobServiceClientRead = await BlobServiceClient.fromConnectionString(connectionStringRead);
+    const blobServiceClientPublish = await BlobServiceClient.fromConnectionString(connectionStringPublish);
 
     if (enableStaticWebSite) {
-        var props = await blobServiceClient.getProperties();
+        var props = await blobServiceClientPublish.getProperties();
 
         props.cors = props.cors || [];
         props.staticWebsite.enabled = true;
@@ -140,15 +148,18 @@ const main = async () => {
         if(!!errorFile){
             props.staticWebsite.errorDocument404Path = errorFile;
         }
-        await blobServiceClient.setProperties(props);
+        await blobServiceClientPublish.setProperties(props);
     }
 
-    const containerService = blobServiceClient.getContainerClient(containerName);
-    if (!await containerService.exists()) {
-        await containerService.create({ access: accessPolicy });
+    // Setup container clients for both read and publish
+    const containerServiceRead = blobServiceClientRead.getContainerClient(containerName);
+    const containerServicePublish = blobServiceClientPublish.getContainerClient(containerName);
+    
+    if (!await containerServicePublish.exists()) {
+        await containerServicePublish.create({ access: accessPolicy });
     }
     else {
-        await containerService.setAccessPolicy(accessPolicy);
+        await containerServicePublish.setAccessPolicy(accessPolicy);
     }
 
     const rootFolder = path.resolve(source);
@@ -221,7 +232,7 @@ const main = async () => {
     // Collect page data instead of just logging it
     const pageData = [];
     
-    for await (const blob of containerService.listBlobsFlat()) {
+    for await (const blob of containerServiceRead.listBlobsFlat()) {
         // only consider blobs ending in "index.html"
         if (!blob.name.endsWith("index.html")) continue;
         const route = blob.name.slice(0, -"index.html".length);
@@ -229,29 +240,32 @@ const main = async () => {
         // tranform blob.properties.lastModified:
         const rawDate       = blob.properties.lastModified;
         const lastModified  = rawDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
-        const pageInfo = `${siteUrl}${route}`;
 
-        // const pageInfo = `PageURL: ${siteUrl}${route}  LastModified: ${lastModified}`;
-        console.log(pageInfo);
-        // pageData.push(pageInfo);
+        const pageInfo = `PageURL: ${siteUrl}${route}  LastModified: ${lastModified}`;
+        // console.log(pageInfo);
+        pageData.push(pageInfo);
     }
 
     // Create a file with the collected data and upload to blob storage
-    // if (pageData.length > 0) {
-    //     const pageDataContent = pageData.join('\n');
-    //     const tempFilePath = path.join(__dirname, 'test-sitemap.txt');
+    if (pageData.length > 0) {
+        const pageDataContent = pageData.join('\n');
+        const tempFilePath = path.join(__dirname, 'test-sitemap.txt');
         
-    //     // Write to temporary file
-    //     fs.writeFileSync(tempFilePath, pageDataContent);
+        // Write to temporary file
+        fs.writeFileSync(tempFilePath, pageDataContent);
         
-    //     // Upload to root of blob storage (no path prefix since target is root)
-    //     await uploadFileToBlob(containerService, tempFilePath, path.join(target, path.basename(tempFilePath)));
+        // Upload to root of blob storage (no path prefix since target is root)
+        await uploadFileToBlob(containerServicePublish, tempFilePath, path.join(target, path.basename(tempFilePath)));
         
-    //     // Clean up temporary file
-    //     fs.unlinkSync(tempFilePath);
+        // Print the fully qualified URL of the uploaded file
+        const uploadedBlobClient = containerServicePublish.getBlockBlobClient(path.join(target, path.basename(tempFilePath)));
+        console.log(`Fully qualified URL: ${uploadedBlobClient.url}`);
         
-    //     console.log(`Uploaded page data file with ${pageData.length} entries to blob storage root`);
-    // }
+        // Clean up temporary file
+        fs.unlinkSync(tempFilePath);
+        
+        console.log(`Uploaded page data file with ${pageData.length} entries to blob storage root`);
+    }
 
     // if(fs.statSync(rootFolder).isFile()){
     //     // when does this ever get called in the case of AdobeDocs?

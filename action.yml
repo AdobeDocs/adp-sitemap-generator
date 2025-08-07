@@ -1,8 +1,11 @@
 name: 'Azure Static Website'
 description: 'Deploy files to Azure Blob Storage Container using a connection string'
 inputs:
-  connection-string: 
-    description: 'Connection String of the Azure Storage Container'
+  connection-string-read: 
+    description: 'Connection String of the Azure Storage Container to read files from'
+    required: true
+  connection-string-publish: 
+    description: 'Connection String of the Azure Storage Container to write to'
     required: true
   source:
     description: 'Folder containing the files to be uploaded to the Storage Container'
