@@ -99,8 +99,8 @@ const main = async () => {
     let deleteTempStart;
     let deleteTempEnd; 
     
-    const connectionStringRead = getInput('connection-string-read');
-    const connectionStringPublish = getInput('connection-string-publish');
+    const connectionStringRead = getInput('connection-string-non-main'); // to read from
+    const connectionStringPublish = getInput('connection-string-main'); // to write to
 
     if (!connectionStringRead) {
         throw "Connection string must be specified!";
@@ -253,6 +253,8 @@ const main = async () => {
         fs.writeFileSync(tempFilePath, pageDataContent);
 
         const normalizedTarget = target === '/' ? '' : target.replace(/^\/+|\/+$/g, '');
+        console.log(normalizedTarget);
+        console.log(console.log(normalizedTarget ? 'Target exists' : 'Target is empty'));
         const blobName = normalizedTarget ? `${normalizedTarget}/${path.basename(tempFilePath)}` : path.basename(tempFilePath);
 
         console.log(`Uploading to blob: ${blobName}`);
