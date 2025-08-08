@@ -285,10 +285,8 @@ const main = async () => {
         });
 
         const combinedUrls = [...edsUrls, ...blobUrls].map(({ loc, lastmod }) => ({
-            url: {
-                loc,
-                lastmod
-            }
+            loc,
+            lastmod
         }));
 
         const sitemapObj = {
