@@ -1,6 +1,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const fetch = require('node-fetch');
 const { promisify } = require('util');
 const { lookup } = require('mime-types');
 
@@ -255,17 +256,33 @@ const main = async () => {
             const hasLongDigitSequence = segments.some(segment => /\d{9,}/.test(segment));
             if (hasLongDigitSequence) continue;
 
-            const rawDate = blob.properties.lastModified;
-            const lastModified = rawDate.toISOString().split('T')[0];
+            const fullUrl = `${siteUrl}${route}`;
 
-            urls.push({
-                loc: `${siteUrl}${route}`,
-                lastmod: lastModified
-            });
+            // Check HTTP status and skip redirects and 404s
+            try {
+                const response = await fetch(fullUrl, { method: 'HEAD', redirect: 'manual' });
+
+                // Skip if status is 404, 301, or 302
+                if ([404, 301, 302].includes(response.status)){
+                    console.log(response + ": " + fullUrl);
+                    continue;
+                } 
+
+                const rawDate = blob.properties.lastModified;
+                const lastModified = rawDate.toISOString().split('T')[0];
+
+                urls.push({
+                    loc: fullUrl,
+                    lastmod: lastModified
+                });
+            } catch (err) {
+                console.warn(`Error fetching ${fullUrl}:`, err.message);
+                continue;
+            }
         }
 
-        return urls;
-    }
+    return urls;
+}
 
     async function generateAndUploadSitemap(containerServicePublish, edsUrls, blobUrls) {
         const builder = new XMLBuilder({
