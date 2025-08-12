@@ -203,7 +203,7 @@ const main = async () => {
         const sitemapBuffer = Buffer.from(sitemapXml, 'utf-8');
 
         const normalizedTarget = target === '/' ? '' : target.replace(/^\/+|\/+$/g, '');
-        const blobName = normalizedTarget ? `${normalizedTarget}/test-sitemap.xml` : 'test-sitemap.xml';
+        const blobName = normalizedTarget ? `${normalizedTarget}/sitemap.xml` : 'sitemap.xml';
 
         const blobClient = containerServicePublish.getBlockBlobClient(blobName);
         await blobClient.uploadData(sitemapBuffer, {
