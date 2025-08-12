@@ -264,7 +264,7 @@ const main = async () => {
 
                 // Skip if status is 404, 301, or 302
                 if ([404, 301, 302].includes(response.status)){
-                    console.log(response + ": " + fullUrl);
+                    console.log(response.status + ": " + fullUrl);
                     continue;
                 } 
 
