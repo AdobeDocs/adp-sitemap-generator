@@ -67,6 +67,7 @@ const main = async () => {
         attributeNamePrefix: '_',
     });
 
+    //Exclude these pages since they are testing and tool pages
     const EXCLUDED_PATTERNS = [
         /^\/test\//,                  // starts with /test/
         /^\/franklin_assets\//,       // starts with /franklin_assets/
@@ -133,8 +134,8 @@ const main = async () => {
         "video-rendering"
     ];
 
-    // Collect page data instead of just logging it
-    async function collectBlobPageData(containerServiceRead, siteUrl) {
+    // Collect page data from azure blobs
+    async function collectBlobPageData(containerServiceRead) {
         const urls = [];
 
         for await (const blob of containerServiceRead.listBlobsFlat()) {
@@ -154,54 +155,54 @@ const main = async () => {
             if (hasLongDigitSequence) continue;
 
             const fullUrl = `${siteUrl}${route}`;
+            const rawDate = blob.properties.lastModified;
+            const lastModified = rawDate.toISOString().split('T')[0];
 
-            // Check HTTP status and skip redirects and 404s
+            urls.push({
+                loc: fullUrl,
+                lastmod: lastModified
+            });
+        }
+        return urls;
+    }
+
+    // HTTP status filter: skip 404s, 301s, and 302s
+    async function filter200Urls(urls) {
+        const healthyUrls = [];
+
+        for (const { loc, lastmod } of urls) {
             try {
-                const response = await fetch(fullUrl, { method: 'HEAD', redirect: 'manual' });
+                const response = await fetch(loc, { method: 'HEAD', redirect: 'manual' });
 
-                // Skip if status is 404, 301, or 302
-                if ([404, 301, 302].includes(response.status)){
+                if ([404, 301, 302].includes(response.status)) {
+                    console.log(`Skipping ${loc} due to status ${response.status}`);
                     continue;
-                } 
-
-                const rawDate = blob.properties.lastModified;
-                const lastModified = rawDate.toISOString().split('T')[0];
-
-                urls.push({
-                    loc: fullUrl,
-                    lastmod: lastModified
-                });
+                }
+                healthyUrls.push({ loc, lastmod });
             } catch (err) {
-                console.warn(`Error fetching ${fullUrl}:`, err.message);
+                console.warn(`Error fetching ${loc}:`, err.message);
                 continue;
             }
         }
+        return healthyUrls;
+    }
 
-    return urls;
-}
-
-    async function generateAndUploadSitemap(containerServicePublish, edsUrls, blobUrls) {
+   async function generateAndUploadSitemap(containerServicePublish, urls) {
         const builder = new XMLBuilder({
             ignoreAttributes: false,
             format: true,
             suppressEmptyNode: true
         });
 
-        const combinedUrls = [...edsUrls, ...blobUrls].map(({ loc, lastmod }) => ({
-            loc,
-            lastmod
-        }));
-
         const sitemapObj = {
             urlset: {
                 _xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9",
-                url: combinedUrls
+                url: urls
             }
         };
 
         const sitemapXml = builder.build(sitemapObj);
         const sitemapBuffer = Buffer.from(sitemapXml, 'utf-8');
-
         const normalizedTarget = target === '/' ? '' : target.replace(/^\/+|\/+$/g, '');
         const blobName = normalizedTarget ? `${normalizedTarget}/sitemap.xml` : 'sitemap.xml';
 
@@ -209,14 +210,15 @@ const main = async () => {
         await blobClient.uploadData(sitemapBuffer, {
             blobHTTPHeaders: { blobContentType: "application/xml" }
         });
-
-        console.log(`✅ Uploaded sitemap with ${combinedUrls.length} entries to: ${blobClient.url}`);
+        console.log(`✅ Uploaded sitemap with ${urls.length} entries to: ${blobClient.url}`);
     }
 
     async function runSitemapWorkflow() {
         const edsUrls = await fetchEDSSitemap();
-        const blobUrls = await collectBlobPageData(containerServiceRead, siteUrl);
-        await generateAndUploadSitemap(containerServicePublish, edsUrls, blobUrls);
+        const blobUrls = await collectBlobPageData(containerServiceRead);
+        const allUrlsNoCheck = [...edsUrls, ...blobUrls];
+        const allHealthyUrls = await filter200Urls(allUrlsNoCheck);
+        await generateAndUploadSitemap(containerServicePublish, allHealthyUrls);
     }
 
     runSitemapWorkflow();
