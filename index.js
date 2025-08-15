@@ -4,6 +4,7 @@ const path = require('path');
 const { getInput, setFailed } = require('@actions/core');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const { XMLParser, XMLBuilder } = require('fast-xml-parser');
+const { get } = require('http');
 
 const main = async () => {    
     const connectionStringRead = getInput('connection-string-non-main'); // to read from
@@ -25,6 +26,12 @@ const main = async () => {
 
     const source = getInput('source');
     let target = getInput('target');
+    const deploy_env = getInput('deploy-env'); //determines siteURL
+    if (!["dev", "prod"].includes(deploy_env)) {
+        throw new Error(`Unknown deploy_env: ${deploy_env}`);
+    }
+
+
     if (target.startsWith('/')) target = target.slice(1);
 
     const accessPolicy = getInput('public-access-policy');
@@ -81,7 +88,9 @@ const main = async () => {
         return !EXCLUDED_PATTERNS.some(pattern => pattern.test(new URL(url).pathname));
     }
 
-    const siteUrl = "https://developer.adobe.com/";
+    const siteUrl = deploy_env === "dev"
+    ? "https://developer-stage.adobe.com/"
+    : "https://developer.adobe.com/";
 
     async function fetchEDSSitemap() {
         try {
@@ -131,7 +140,8 @@ const main = async () => {
         "ttv-api",
         "ucm-api",
         "video-reframe-api-beta",
-        "video-rendering"
+        "video-rendering",
+        "test-private"
     ];
 
     // Collect page data from azure blobs
@@ -140,16 +150,15 @@ const main = async () => {
 
         for await (const blob of containerServiceRead.listBlobsFlat()) {
             if (!blob.name.endsWith("index.html")) continue;
-
             const route = blob.name.slice(0, -"index.html".length);
 
-            // 🚫 Skip if route starts ends with a 404 
+            // Skip if route ends with "404/"
             if (route.endsWith("404/")) continue;
 
-            // 🚫 Skip if route starts with any excluded path (private/secured sites taken from fastly)
+            // Skip if route starts with any excluded path (private/secured sites taken from fastly)
             if (EXCLUDED_PRIVATE_SITES.some(excluded => route.startsWith(`${excluded}/`))) continue;
 
-            // 🚫 Skip if route contains a numeric segment longer than 9 digits (for the temp files created)
+            // Skip if route contains a numeric segment longer than 9 digits (for the temp files created)
             const segments = route.split('/');
             const hasLongDigitSequence = segments.some(segment => /\d{9,}/.test(segment));
             if (hasLongDigitSequence) continue;
@@ -169,13 +178,11 @@ const main = async () => {
     // HTTP status filter: skip 404s, 301s, and 302s
     async function filter200Urls(urls) {
         const healthyUrls = [];
-
         for (const { loc, lastmod } of urls) {
             try {
                 const response = await fetch(loc, { method: 'HEAD', redirect: 'manual' });
-
                 if ([404, 301, 302].includes(response.status)) {
-                    console.log(`Skipping ${loc} due to status ${response.status}`);
+                    console.log(`${response.status}: ${loc}`);
                     continue;
                 }
                 healthyUrls.push({ loc, lastmod });
@@ -193,7 +200,6 @@ const main = async () => {
             format: true,
             suppressEmptyNode: true
         });
-
         const sitemapObj = {
             urlset: {
                 _xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9",
@@ -210,7 +216,7 @@ const main = async () => {
         await blobClient.uploadData(sitemapBuffer, {
             blobHTTPHeaders: { blobContentType: "application/xml" }
         });
-        console.log(`✅ Uploaded sitemap with ${urls.length} entries to: ${blobClient.url}`);
+        console.log(`Success! Uploaded sitemap with ${urls.length} entries to: ${blobClient.url}`);
     }
 
     async function runSitemapWorkflow() {

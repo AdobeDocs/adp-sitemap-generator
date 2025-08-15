@@ -7,6 +7,9 @@ inputs:
   connection-string-main: 
     description: 'Connection String of the Azure Storage Container to write to (the root)'
     required: true
+  deploy-env:
+   description: 'Environment deployment is coming from - stage or prod'
+   required: true
   source:
     description: 'Folder containing the files to be uploaded to the Storage Container'
     required: false
