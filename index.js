@@ -76,12 +76,14 @@ const main = async () => {
 
     //Exclude these pages since they are testing and tool pages
     const EXCLUDED_PATTERNS = [
-        /^\/test\//,                  // starts with /test/
-        /^\/franklin_assets\//,       // starts with /franklin_assets/
-        /^\/tools\//,                 // starts with /tools/
-        /\/nav$/,                     // ends with /nav
-        /^\/github-actions-test\//,   // starts with /github-actions-test/
-        /\/config\/?$/                // ends with /config/ or /config
+        /^\/test\//,                    // starts with /test/
+        /^\/franklin_assets\//,         // starts with /franklin_assets/
+        /^\/tools\//,                   // starts with /tools/
+        /\/nav$/,                       // ends with /nav
+        /^\/github-actions-test\//,     // starts with /github-actions-test/
+        /^\/github-actions-test-two\//, // starts with /github-actions-test-two/
+        /\/config\/?$/,                 // ends with /config/ or /config
+        /^\/dev-docs-reference\//       // starts with /dev-docs-reference/
     ];
 
     function shouldIncludeUrl(url) {
@@ -124,7 +126,7 @@ const main = async () => {
         }
     }
 
-    // list taken from active sites on Fastly - need to keep updated
+    // list taken from active sites on Fastly - no need to keep updated becuase they live in different azure blobs
     const EXCLUDED_PRIVATE_SITES = [
         "adls-beta", 
         "avatar-tts-beta",
@@ -141,7 +143,7 @@ const main = async () => {
         "ucm-api",
         "video-reframe-api-beta",
         "video-rendering",
-        "test-private"
+        "test-private",        
     ];
 
     // Collect page data from azure blobs
