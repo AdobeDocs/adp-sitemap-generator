@@ -76,14 +76,14 @@ const main = async () => {
 
     //Exclude these pages since they are testing and tool pages
     const EXCLUDED_PATTERNS = [
-        /^\/test\//,                    // starts with /test/
-        /^\/franklin_assets\//,         // starts with /franklin_assets/
-        /^\/tools\//,                   // starts with /tools/
-        /\/nav$/,                       // ends with /nav
-        /^\/github-actions-test\//,     // starts with /github-actions-test/
+        /^\/test\//,                  // starts with /test/
+        /^\/franklin_assets\//,       // starts with /franklin_assets/
+        /^\/tools\//,                 // starts with /tools/
+        /\/nav$/,                     // ends with /nav
+        /^\/github-actions-test\//,   // starts with /github-actions-test/
         /^\/github-actions-test-two\//, // starts with /github-actions-test-two/
-        /\/config\/?$/,                 // ends with /config/ or /config
-        /^\/dev-docs-reference\//       // starts with /dev-docs-reference/
+        /^\/dev-docs-reference\//,       // starts with /dev-docs-reference/
+        /\/config\/?$/                // ends with /config/ or /config
     ];
 
     function shouldIncludeUrl(url) {
@@ -203,8 +203,9 @@ const main = async () => {
             suppressEmptyNode: true
         });
         const sitemapObj = {
+            '?xml': { _version: '1.0', _encoding: 'UTF-8' },
             urlset: {
-                _xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9",
+                xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9",
                 url: urls
             }
         };
