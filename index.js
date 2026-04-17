@@ -1,5 +1,4 @@
 
-const fs = require('fs');
 const path = require('path');
 const { getInput, setFailed } = require('@actions/core');
 const { BlobServiceClient } = require('@azure/storage-blob');
@@ -199,17 +198,20 @@ const main = async () => {
    async function generateAndUploadSitemap(containerServicePublish, urls) {
         const builder = new XMLBuilder({
             ignoreAttributes: false,
+            attributeNamePrefix: '@_',
             format: true,
+            indentBy: '  ',
             suppressEmptyNode: true
         });
         const sitemapObj = {
             urlset: {
-                xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9",
+                '@_xmlns': 'http://www.sitemaps.org/schemas/sitemap/0.9',
                 url: urls
             }
         };
 
-        const sitemapXml = builder.build(sitemapObj);
+        const body = builder.build(sitemapObj);
+        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n${body}`;
         const sitemapBuffer = Buffer.from(sitemapXml, 'utf-8');
         const normalizedTarget = target === '/' ? '' : target.replace(/^\/+|\/+$/g, '');
         const blobName = normalizedTarget ? `${normalizedTarget}/sitemap.xml` : 'sitemap.xml';
