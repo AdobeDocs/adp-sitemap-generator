@@ -60,9 +60,9 @@ const main = async () => {
     const containerServicePublish = blobServiceClientPublish.getContainerClient(containerName);
     
     if (!await containerServicePublish.exists()) {
-        await containerServicePublish.create({ access: accessPolicy });
+        await containerServicePublish.create(accessPolicy ? { access: accessPolicy } : {});
     }
-    else {
+    else if (accessPolicy) {
         await containerServicePublish.setAccessPolicy(accessPolicy);
     }
 
