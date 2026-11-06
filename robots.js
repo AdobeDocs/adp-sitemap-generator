@@ -16,7 +16,7 @@ const main = async () => {
 
     const containerClient = blobServiceClient.getContainerClient('$web');
     if (!await containerClient.exists()) {
-        await containerClient.create({ access: 'container' });
+        await containerClient.create();
     }
 
     const robotsContent = fs.readFileSync(path.join(__dirname, 'robots.txt'));
